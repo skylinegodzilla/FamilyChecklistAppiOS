@@ -84,8 +84,6 @@ Replicate the web frontend with:
   - Handles URLRequests, adds headers, decodes JSON
 - **SessionTokenInterceptor**
   - Adds Bearer token, handles 401/403
-- **AppRouter** *(optional)*
-  - Centralized route control if needed
 
 ---
 

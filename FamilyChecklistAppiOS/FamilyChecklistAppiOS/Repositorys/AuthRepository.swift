@@ -8,16 +8,13 @@
 import Foundation
 
 protocol AuthRepositoryProtocol {
-    func login(username: String, password: String) async throws -> UserLoginResponse
-    func register(
-        username: String,
-        email: String,
-        password: String
-    ) async throws -> UserRegistrationResponse
-    func logout(token: String) async throws -> LogoutResponse
-    func getUserInfo(token: String) async throws -> UserInfoResponse
+    func login(username: String, password: String) async -> Result<UserLoginResponse, Error>
+    func register(username: String, email: String, password: String) async -> Result<UserRegistrationResponse, Error>
+    func logout(token: String) async -> Result<LogoutResponse, Error>
+    func getUserInfo(token: String) async -> Result<UserInfoResponse, Error>
 }
 
+// - MARK: Login structs
 struct UserLoginRequest: Codable {
     let username: String
     let password: String
@@ -30,6 +27,7 @@ struct UserLoginResponse: Codable {
     let role: String
 }
 
+// - MARK: Registration structs
 struct UserRegistrationRequest: Codable {
     let username: String
     let email: String
@@ -42,11 +40,14 @@ struct UserRegistrationResponse: Codable {
     let message: String
 }
 
+// - MARK: Logout structs
 struct LogoutResponse: Codable {
     let success: Bool
     let message: String
 }
 
+// - MARK: UserInfo structs
+// TODO: go back and look up how you built this endpoint make shure that users cant fetch other users info unless they are admin
 struct UserInfoResponse: Codable {
     let username: String
     let email: String
@@ -62,68 +63,65 @@ final class AuthRepository: AuthRepositoryProtocol {
         self.baseURL = baseURL
     }
 
-    func login(username: String, password: String) async throws -> UserLoginResponse {
-        let requestPayload = UserLoginRequest(username: username, password: password)
-        let request = try RequestBuilder(baseURL: baseURL, path: "/api/auth/login")
-            .setMethod("POST")
-            .setJSONBody(requestPayload)
-            .build()
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try validate(response: response)
-        return try jsonDecoder.decode(UserLoginResponse.self, from: data)
-    }
-
-    func register(
-        username: String,
-        email: String,
-        password: String
-    ) async throws -> UserRegistrationResponse {
-        let requestPayload = UserRegistrationRequest(
-            username: username,
-            email: email,
-            password: password
-        )
-        let request = try RequestBuilder(baseURL: baseURL, path: "/api/auth/register")
-            .setMethod("POST")
-            .setJSONBody(requestPayload)
-            .build()
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try validate(response: response)
-        return try jsonDecoder.decode(UserRegistrationResponse.self, from: data)
-    }
-
-    func logout(token: String) async throws -> LogoutResponse {
-        let request = try RequestBuilder(baseURL: baseURL, path: "/api/auth/logout")
-            .setMethod("POST")
-            .addAuthorization(token: token)
-            .build()
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try validate(response: response)
-        return try jsonDecoder.decode(LogoutResponse.self, from: data)
-    }
-
-    func getUserInfo(token: String) async throws -> UserInfoResponse {
-        let request = try RequestBuilder(baseURL: baseURL, path: "/api/auth/userinfo")
-            .setMethod("GET")
-            .addAuthorization(token: token)
-            .build()
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try validate(response: response)
-        return try jsonDecoder.decode(UserInfoResponse.self, from: data)
-    }
-    
-    // MARK: - Helpers
-    
-    private func validate(response: URLResponse) throws {
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw URLError(.badServerResponse)
+    func login(username: String, password: String) async -> Result<UserLoginResponse, Error> {
+        do {
+            let requestPayload = UserLoginRequest(username: username, password: password)
+            let request = try RequestBuilder(baseURL: baseURL, path: "/api/auth/login")
+                .setMethod("POST")
+                .setJSONBody(requestPayload)
+                .build()
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try APIErrorHandler.validate(response)
+            let decoded = try jsonDecoder.decode(UserLoginResponse.self, from: data)
+            return .success(decoded)
+        } catch {
+            return .failure(error)
         }
-        guard (200...299).contains(httpResponse.statusCode) else {
-            throw NSError(domain: "HTTPError", code: httpResponse.statusCode, userInfo: nil)
+    }
+
+    func register(username: String, email: String, password: String) async -> Result<UserRegistrationResponse, Error> {
+        do {
+            let requestPayload = UserRegistrationRequest(username: username, email: email, password: password)
+            let request = try RequestBuilder(baseURL: baseURL, path: "/api/auth/register")
+                .setMethod("POST")
+                .setJSONBody(requestPayload)
+                .build()
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try APIErrorHandler.validate(response)
+            let decoded = try jsonDecoder.decode(UserRegistrationResponse.self, from: data)
+            return .success(decoded)
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    func logout(token: String) async -> Result<LogoutResponse, Error> {
+        do {
+            let request = try RequestBuilder(baseURL: baseURL, path: "/api/auth/logout")
+                .setMethod("POST")
+                .addAuthorization(token: token)
+                .build()
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try APIErrorHandler.validate(response)
+            let decoded = try jsonDecoder.decode(LogoutResponse.self, from: data)
+            return .success(decoded)
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    func getUserInfo(token: String) async -> Result<UserInfoResponse, Error> {
+        do {
+            let request = try RequestBuilder(baseURL: baseURL, path: "/api/auth/userinfo")
+                .setMethod("GET")
+                .addAuthorization(token: token)
+                .build()
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try APIErrorHandler.validate(response)
+            let decoded = try jsonDecoder.decode(UserInfoResponse.self, from: data)
+            return .success(decoded)
+        } catch {
+            return .failure(error)
         }
     }
 }

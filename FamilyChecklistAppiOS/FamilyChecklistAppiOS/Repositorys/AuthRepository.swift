@@ -56,24 +56,23 @@ struct UserInfoResponse: Codable, Sendable {
 
 final actor AuthRepository: AuthRepositoryProtocol {
     
-    private let baseURL: String
-    private let jsonDecoder = JSONDecoder()
+    private let networkClient: NetworkClientProtocol
+    private let baseURLString: String
     
-    init(baseURL: String) {
-        self.baseURL = baseURL
+    init(networkClient: NetworkClientProtocol = NetworkClient.shared) {
+        self.networkClient = networkClient
+        self.baseURLString = AppEnvironment.current.baseURL
     }
 
     func login(username: String, password: String) async -> Result<UserLoginResponse, Error> {
         do {
             let requestPayload = UserLoginRequest(username: username, password: password)
-            let request = try RequestBuilder(baseURL: baseURL, path: "/api/auth/login")
+            let request = try RequestBuilder(baseURL: baseURLString, path: "/api/auth/login")
                 .setMethod("POST")
                 .setJSONBody(requestPayload)
                 .build()
-            let (data, response) = try await URLSession.shared.data(for: request)
-            try APIErrorHandler.validate(response)
-            let decoded = try jsonDecoder.decode(UserLoginResponse.self, from: data)
-            return .success(decoded)
+            
+            return await networkClient.performRequest(request)
         } catch {
             return .failure(error)
         }
@@ -82,14 +81,12 @@ final actor AuthRepository: AuthRepositoryProtocol {
     func register(username: String, email: String, password: String) async -> Result<UserRegistrationResponse, Error> {
         do {
             let requestPayload = UserRegistrationRequest(username: username, email: email, password: password)
-            let request = try RequestBuilder(baseURL: baseURL, path: "/api/auth/register")
+            let request = try RequestBuilder(baseURL: baseURLString, path: "/api/auth/register")
                 .setMethod("POST")
                 .setJSONBody(requestPayload)
                 .build()
-            let (data, response) = try await URLSession.shared.data(for: request)
-            try APIErrorHandler.validate(response)
-            let decoded = try jsonDecoder.decode(UserRegistrationResponse.self, from: data)
-            return .success(decoded)
+
+            return await networkClient.performRequest(request)
         } catch {
             return .failure(error)
         }
@@ -97,14 +94,12 @@ final actor AuthRepository: AuthRepositoryProtocol {
 
     func logout(token: String) async -> Result<LogoutResponse, Error> {
         do {
-            let request = try RequestBuilder(baseURL: baseURL, path: "/api/auth/logout")
+            let request = try RequestBuilder(baseURL: baseURLString, path: "/api/auth/logout")
                 .setMethod("POST")
                 .addAuthorization(token: token)
                 .build()
-            let (data, response) = try await URLSession.shared.data(for: request)
-            try APIErrorHandler.validate(response)
-            let decoded = try jsonDecoder.decode(LogoutResponse.self, from: data)
-            return .success(decoded)
+
+            return await networkClient.performRequest(request)
         } catch {
             return .failure(error)
         }
@@ -112,14 +107,12 @@ final actor AuthRepository: AuthRepositoryProtocol {
 
     func getUserInfo(token: String) async -> Result<UserInfoResponse, Error> {
         do {
-            let request = try RequestBuilder(baseURL: baseURL, path: "/api/auth/userinfo")
+            let request = try RequestBuilder(baseURL: baseURLString, path: "/api/auth/userinfo")
                 .setMethod("GET")
                 .addAuthorization(token: token)
                 .build()
-            let (data, response) = try await URLSession.shared.data(for: request)
-            try APIErrorHandler.validate(response)
-            let decoded = try jsonDecoder.decode(UserInfoResponse.self, from: data)
-            return .success(decoded)
+
+            return await networkClient.performRequest(request)
         } catch {
             return .failure(error)
         }

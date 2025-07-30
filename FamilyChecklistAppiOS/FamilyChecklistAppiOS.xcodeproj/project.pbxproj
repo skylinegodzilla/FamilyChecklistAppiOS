@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B5C865B52E39A6B5001A6E13 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = B5C865B42E39A6B5001A6E13 /* KeychainAccess */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		B5411E162E38561D00082EC2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5C865B52E39A6B5001A6E13 /* KeychainAccess in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,7 @@
 				B5411E0A2E38561C00082EC2 /* FamilyChecklistAppiOS */,
 				B5411E182E38561D00082EC2 /* FamilyChecklistAppiOSTests */,
 				B5411E222E38561D00082EC2 /* FamilyChecklistAppiOSUITests */,
+				B5C865B32E39A6B5001A6E13 /* Frameworks */,
 				B5411E092E38561C00082EC2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +96,13 @@
 				B5411E1F2E38561D00082EC2 /* FamilyChecklistAppiOSUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B5C865B32E39A6B5001A6E13 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +125,7 @@
 			);
 			name = FamilyChecklistAppiOS;
 			packageProductDependencies = (
+				B5C865B42E39A6B5001A6E13 /* KeychainAccess */,
 			);
 			productName = FamilyChecklistAppiOS;
 			productReference = B5411E082E38561C00082EC2 /* FamilyChecklistAppiOS.app */;
@@ -195,6 +209,9 @@
 			);
 			mainGroup = B5411DFF2E38561C00082EC2;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B5411E602E39A55900082EC2 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B5411E092E38561C00082EC2 /* Products */;
 			projectDirPath = "";
@@ -558,6 +575,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B5411E602E39A55900082EC2 /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B5C865B42E39A6B5001A6E13 /* KeychainAccess */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B5411E602E39A55900082EC2 /* XCRemoteSwiftPackageReference "KeychainAccess" */;
+			productName = KeychainAccess;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B5411E002E38561C00082EC2 /* Project object */;
 }

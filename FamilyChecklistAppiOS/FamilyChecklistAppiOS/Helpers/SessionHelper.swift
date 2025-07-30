@@ -33,7 +33,7 @@ enum SessionHelper {
         guard let username,
               let isAdmin,
               let token else {
-            // some logging here so that we can see what is missing
+            // Some logging here so that we can see what is missing
             var missing: [String] = []
             if username == nil { missing.append("username") }
             if isAdmin == nil { missing.append("isAdmin") }

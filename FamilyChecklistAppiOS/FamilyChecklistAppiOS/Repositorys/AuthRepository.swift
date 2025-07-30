@@ -15,12 +15,12 @@ protocol AuthRepositoryProtocol {
 }
 
 // - MARK: Login structs
-struct UserLoginRequest: Codable {
+struct UserLoginRequest: Codable, Sendable {
     let username: String
     let password: String
 }
 
-struct UserLoginResponse: Codable {
+struct UserLoginResponse: Codable, Sendable {
     let token: String
     let status: Int
     let message: String
@@ -28,33 +28,33 @@ struct UserLoginResponse: Codable {
 }
 
 // - MARK: Registration structs
-struct UserRegistrationRequest: Codable {
+struct UserRegistrationRequest: Codable, Sendable {
     let username: String
     let email: String
     let password: String
 }
 
-struct UserRegistrationResponse: Codable {
+struct UserRegistrationResponse: Codable, Sendable {
     let token: String
     let status: Int
     let message: String
 }
 
 // - MARK: Logout structs
-struct LogoutResponse: Codable {
+struct LogoutResponse: Codable, Sendable {
     let success: Bool
     let message: String
 }
 
 // - MARK: UserInfo structs
 // TODO: go back and look up how you built this endpoint make shure that users cant fetch other users info unless they are admin
-struct UserInfoResponse: Codable {
+struct UserInfoResponse: Codable, Sendable {
     let username: String
     let email: String
     let role: String
 }
 
-final class AuthRepository: AuthRepositoryProtocol {
+final actor AuthRepository: AuthRepositoryProtocol {
     
     private let baseURL: String
     private let jsonDecoder = JSONDecoder()

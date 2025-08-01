@@ -11,9 +11,11 @@ struct AccessView: View {
     @StateObject private var viewModel = AccessViewModel()
 
     var body: some View {
+        var viewState = viewModel.viewState
+        
         VStack(spacing: 32) {
             // Title stays pinned — smooth transition
-            Text(viewModel.viewState.title)
+            Text(viewState.title)
                 .font(.largeTitle)
                 .bold()
                 .frame(maxHeight: 60) // fixes vertical shift
@@ -22,36 +24,36 @@ struct AccessView: View {
             // FORM CONTAINER
             VStack(spacing: 16) {
                 TextField("Username", text: Binding(
-                    get: { viewModel.viewState.username },
-                    set: viewModel.viewState.onUsernameChange
+                    get: { viewState.username },
+                    set: viewState.onUsernameChange
                 ))
                 .textFieldStyle(.roundedBorder)
 
-                if viewModel.viewState.isRegistering {
+                if viewState.isRegistering {
                     TextField("Email", text: Binding(
-                        get: { viewModel.viewState.email },
-                        set: viewModel.viewState.onEmailChange
+                        get: { viewState.email },
+                        set: viewState.onEmailChange
                     ))
                     .textFieldStyle(.roundedBorder)
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
 
                 SecureField("Password", text: Binding(
-                    get: { viewModel.viewState.password },
-                    set: viewModel.viewState.onPasswordChange
+                    get: { viewState.password },
+                    set: viewState.onPasswordChange
                 ))
                 .textFieldStyle(.roundedBorder)
 
-                if viewModel.viewState.isRegistering {
+                if viewState.isRegistering {
                     SecureField("Confirm Password", text: Binding(
-                        get: { viewModel.viewState.confirmPassword ?? "" },
-                        set: viewModel.viewState.onConfirmPasswordChange
+                        get: { viewState.confirmPassword ?? "" },
+                        set: viewState.onConfirmPasswordChange
                     ))
                     .textFieldStyle(.roundedBorder)
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
 
-                if let errorMessage = viewModel.viewState.errorMessage {
+                if let errorMessage = viewState.errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
                         .font(.callout)
@@ -59,17 +61,18 @@ struct AccessView: View {
                         .padding(.top, 4)
                 }
 
-                Button(viewModel.viewState.isRegistering ? "Create Account" : "Login") {
+                Button(viewState.isRegistering ? "Create Account" : "Login") {
                     Task {
-                        await viewModel.viewState.onSubmit?()
+                        await viewState.onSubmit?()
                     }
                 }
                 .buttonStyle(PrimaryButtonStyle())
-                .disabled(viewModel.viewState.onSubmit == nil)
+                .disabled(viewState.onSubmit == nil)
+                .visuallyEnabled(viewState.onSubmit != nil) // TODO: build a custom button so that we dont need to call this.
 
-                Button(viewModel.viewState.isRegistering ? "Already have an account?" : "Create an account") {
+                Button(viewState.isRegistering ? "Already have an account?" : "Create an account") {
                     withAnimation(.easeInOut(duration: 0.4)) {
-                        viewModel.viewState.onToggleFormMode()
+                        viewState.onToggleFormMode()
                     }
                 }
                 .buttonStyle(SecondaryButtonStyle())
@@ -84,7 +87,7 @@ struct AccessView: View {
                             .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                     )
             )
-            .animation(.easeInOut(duration: 0.3), value: viewModel.viewState.isRegistering)
+            .animation(.easeInOut(duration: 0.3), value: viewState.isRegistering)
 
             Spacer()
         }

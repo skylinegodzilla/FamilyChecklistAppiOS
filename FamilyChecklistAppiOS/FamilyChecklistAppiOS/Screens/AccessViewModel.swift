@@ -25,7 +25,7 @@ final class AccessViewModel: ObservableObject {
     // MARK: - Private State
     private var model: Model {
         didSet {
-            viewState = Self.createViewState(from: model, viewModel: self)
+            viewState = self.createViewState(from: model)
         }
     }
 
@@ -35,11 +35,12 @@ final class AccessViewModel: ObservableObject {
     init(authRepository: AuthRepository = AuthRepository()) {
         self.authRepository = authRepository
         self.model = Model()
-        self.viewState = Self.createViewState(from: model, viewModel: self)
+        self.viewState = self.createViewState(from: model)
     }
 
     // MARK: - Private State Mapping
-    private static func createViewState(from model: Model, viewModel: AccessViewModel) -> ViewState {
+    private func createViewState(from model: Model) -> ViewState {
+        // TODO: swap this part out after building propper SwiftUI componints for text validation fields
         let isValid: Bool = {
             if model.username.isEmpty || model.password.isEmpty {
                 return false
@@ -51,6 +52,7 @@ final class AccessViewModel: ObservableObject {
         }()
 
         return ViewState(
+            title: model.isRegistering ? "Register" : "Login", // TODO: Wonder if I should look in to localising strings?
             username: model.username,
             email: model.email,
             password: model.password,
@@ -59,12 +61,12 @@ final class AccessViewModel: ObservableObject {
             isLoading: model.isLoading,
             errorMessage: model.errorMessage,
 
-            onUsernameChange: { [weak viewModel] in viewModel?.updateUsername($0) },
-            onEmailChange: { [weak viewModel] in viewModel?.updateEmail($0) },
-            onPasswordChange: { [weak viewModel] in viewModel?.updatePassword($0) },
-            onConfirmPasswordChange: { [weak viewModel] in viewModel?.updateConfirmPassword($0) },
-            onToggleFormMode: { [weak viewModel] in viewModel?.toggleFormMode() },
-            onSubmit: isValid ? { [weak viewModel] in await viewModel?.submit() } : nil
+            onUsernameChange: { [weak self] in self?.updateUsername($0) },
+            onEmailChange: { [weak self] in self?.updateEmail($0) },
+            onPasswordChange: { [weak self] in self?.updatePassword($0) },
+            onConfirmPasswordChange: { [weak self] in self?.updateConfirmPassword($0) },
+            onToggleFormMode: { [weak self] in self?.toggleFormMode() },
+            onSubmit: isValid ? { [weak self] in await self?.submit() } : nil
         )
     }
 
@@ -72,10 +74,21 @@ final class AccessViewModel: ObservableObject {
     // None yet
 
     // MARK: - Private Logic
-    private func updateUsername(_ value: String) { model.username = value }
-    private func updateEmail(_ value: String) { model.email = value }
-    private func updatePassword(_ value: String) { model.password = value }
-    private func updateConfirmPassword(_ value: String) { model.confirmPassword = value }
+    private func updateUsername(_ value: String) {
+        model.username = value
+    }
+    
+    private func updateEmail(_ value: String) {
+        model.email = value
+    }
+    
+    private func updatePassword(_ value: String) {
+        model.password = value
+    }
+    
+    private func updateConfirmPassword(_ value: String) {
+        model.confirmPassword = value
+    }
 
     private func toggleFormMode() {
         model.isRegistering.toggle()
@@ -102,6 +115,7 @@ final class AccessViewModel: ObservableObject {
                 switch result {
                 case .success:
                     // TODO: Navigate to TabView/HomeView on successful registration
+                    print("✅ Registration successful")
                     break
                 case .failure(let error):
                     self.model.errorMessage = error.localizedDescription
@@ -114,6 +128,7 @@ final class AccessViewModel: ObservableObject {
                 switch result {
                 case .success:
                     // TODO: Navigate to TabView/HomeView on successful login
+                    print("✅ Login successful")
                     break // handle success if needed
                 case .failure(let error):
                     self.model.errorMessage = error.localizedDescription
@@ -136,6 +151,7 @@ final class AccessViewModel: ObservableObject {
     }
     
     struct ViewState {
+        var title: String
         var username: String
         var email: String
         var password: String
@@ -152,6 +168,7 @@ final class AccessViewModel: ObservableObject {
         let onSubmit: (() async -> Void)?
 
         static let initial = ViewState(
+            title: "Login",
             username: "",
             email: "",
             password: "",

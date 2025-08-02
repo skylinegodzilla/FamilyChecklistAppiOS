@@ -22,6 +22,7 @@ actor NetworkClient: NetworkClientProtocol {
             let decoded = try jsonDecoder.decode(T.self, from: data)
             return .success(decoded)
         } catch {
+            print("the error is: \(error)")
             return .failure(error)
         }
     }

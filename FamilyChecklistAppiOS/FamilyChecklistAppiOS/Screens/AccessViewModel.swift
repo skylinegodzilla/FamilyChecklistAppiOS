@@ -118,7 +118,9 @@ final class AccessViewModel: ObservableObject {
                     print("✅ Registration successful")
                     break
                 case .failure(let error):
-                    self.model.errorMessage = error.localizedDescription
+                    var errorMessage = "\(error)"
+                    if (errorMessage == "conflict") {errorMessage = "Username or email is allready taken" } // 409 error
+                    self.model.errorMessage = errorMessage
                 }
             } else {
                 let result = await self.authRepository.login(
@@ -131,7 +133,9 @@ final class AccessViewModel: ObservableObject {
                     print("✅ Login successful")
                     break // handle success if needed
                 case .failure(let error):
-                    self.model.errorMessage = error.localizedDescription
+                    var errorMessage = "\(error)"
+                    if (errorMessage == "unauthorized") {errorMessage = "Invalid credentials" } // 401 error
+                    self.model.errorMessage = errorMessage
                 }
             }
         }

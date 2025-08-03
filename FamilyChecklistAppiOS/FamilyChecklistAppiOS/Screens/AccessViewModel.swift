@@ -8,7 +8,6 @@
 import Foundation
 // TODO: Sort out the valdation for the submit button
 
-
 @MainActor
 final class AccessViewModel: ObservableObject {
 
@@ -34,7 +33,7 @@ final class AccessViewModel: ObservableObject {
 
     // MARK: - Private State Mapping
     private func createViewState(from model: Model) -> ViewState {
-        // TODO: swap this part out after building propper SwiftUI componints for text validation fields
+        // TODO: tidy this validation up
         let isValid: Bool = {
             if model.usernameTextField.text.isEmpty || model.passwordTextField.text.isEmpty {
                 return false
@@ -104,21 +103,21 @@ final class AccessViewModel: ObservableObject {
         let showError: Bool
         switch keyPath {
         case \Model.usernameTextField:
-            showError = field.touched && !validator(field.text) // TODO: why do I need validation here if I have the validatorCondition: { ... }
+            showError = field.touched && !validator(field.text)
 
         case \Model.emailTextField:
-            let isMatching = field.text == model.usernameTextField.text // TODO: why do I need validation here if I have the validatorCondition: { ... }
+            showError = field.touched && !validator(field.text)
+
+        case \Model.passwordTextField:
+            showError = field.touched && !validator(field.text)
+            
+        case \Model.confirmPasswordTextField:
+            let isMatching = field.text == model.passwordTextField.text // TODO: why do I need validation here if I have the validatorCondition: { ... }
             if field.isFocused {
                 showError = false
             } else {
                 showError = field.touched && !isMatching
             }
-
-        case \Model.passwordTextField:
-            showError = field.touched && !validator(field.text) // TODO: why do I need validation here if I have the validatorCondition: { ... }
-            
-        case \Model.confirmPasswordTextField:
-            showError = field.touched && !validator(field.text) // TODO: why do I need validation here if I have the validatorCondition: { ... }
 
         default:
             showError = false
@@ -141,23 +140,6 @@ final class AccessViewModel: ObservableObject {
         )
     }
     
-    
-    private func updateUsername(_ value: String) { // TODO: Check if this is still even called
-        model.usernameTextField.text = value
-    }
-    
-    private func updateEmail(_ value: String) { // TODO: Check if this is still even called
-        model.emailTextField.text = value
-    }
-    
-    private func updatePassword(_ value: String) { // TODO: Check if this is still even called
-        model.passwordTextField.text = value
-    }
-    
-    private func updateConfirmPassword(_ value: String) { // TODO: Check if this is still even called
-        model.confirmPasswordTextField.text = value
-    }
-
     private func toggleFormMode() {
         model.isRegistering.toggle()
         model.emailTextField.text = ""

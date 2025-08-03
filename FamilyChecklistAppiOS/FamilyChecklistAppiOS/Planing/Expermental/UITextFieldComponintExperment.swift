@@ -8,94 +8,94 @@
 import SwiftUICore
 import SwiftUI
 
-// MARK: - TextInputComponentViewState
-
-struct TextInputComponentViewState {
-    let label: String
-    let text: String
-    let isValid: Bool
-    let showError: Bool
-    let isSecure: Bool
-    let onTextChanged: (String) -> Void
-    let onFocusChanged: (Bool) -> Void
-}
-
-// MARK: - TextInputComponentModel
-
-struct TextFieldModel {
-    var text: String = ""
-    var touched: Bool = false
-    var isFocused: Bool = false
-
-    let validator: (String) -> Bool
-
-    init(text: String = "", validator: @escaping (String) -> Bool = { _ in true }) {
-        self.text = text
-        self.validator = validator
-    }
-
-    mutating func updateText(_ newText: String) {
-        self.text = newText
-    }
-
-    mutating func setTouched() {
-        self.touched = true
-    }
-
-    mutating func setFocus(_ focused: Bool) {
-        self.isFocused = focused
-        if !focused {
-            setTouched()
-        }
-    }
-
-    var isValid: Bool {
-        validator(text)
-    }
-}
-
-// MARK: - TextInputComponent
-
-struct TextInputComponent: View {
-    let viewState: TextInputComponentViewState
-    @FocusState private var isFocused: Bool
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(viewState.label)
-                .font(.caption)
-                .foregroundColor(.secondary)
-
-            if viewState.isSecure {
-                SecureField("Enter value", text: Binding(
-                    get: { viewState.text },
-                    set: { viewState.onTextChanged($0) }
-                ))
-                .textFieldStyle(.roundedBorder)
-                .focused($isFocused)
-                .onChange(of: isFocused) { focused in
-                    viewState.onFocusChanged(focused)
-                }
-            } else {
-                TextField("Enter value", text: Binding(
-                    get: { viewState.text },
-                    set: { viewState.onTextChanged($0) }
-                ))
-                .textFieldStyle(.roundedBorder)
-                .focused($isFocused)
-                .onChange(of: isFocused) { focused in
-                    viewState.onFocusChanged(focused)
-                }
-            }
-
-            if viewState.showError {
-                Text("Invalid input")
-                    .font(.caption)
-                    .foregroundColor(.red)
-            }
-        }
-    }
-}
+//// MARK: - TextInputComponentViewState
+//
+//struct TextInputComponentViewState {
+//    let label: String
+//    let text: String
+//    let isValid: Bool
+//    let showError: Bool
+//    let isSecure: Bool
+//    let onTextChanged: (String) -> Void
+//    let onFocusChanged: (Bool) -> Void
+//}
+//
+//// MARK: - TextInputComponentModel
+//
+//struct TextFieldModel {
+//    var text: String = ""
+//    var touched: Bool = false
+//    var isFocused: Bool = false
+//
+//    let validator: (String) -> Bool
+//
+//    init(text: String = "", validator: @escaping (String) -> Bool = { _ in true }) {
+//        self.text = text
+//        self.validator = validator
+//    }
+//
+//    mutating func updateText(_ newText: String) {
+//        self.text = newText
+//    }
+//
+//    mutating func setTouched() {
+//        self.touched = true
+//    }
+//
+//    mutating func setFocus(_ focused: Bool) {
+//        self.isFocused = focused
+//        if !focused {
+//            setTouched()
+//        }
+//    }
+//
+//    var isValid: Bool {
+//        validator(text)
+//    }
+//}
+//
+//// MARK: - TextInputComponent
+//
+//struct TextInputComponent: View {
+//    let viewState: TextInputComponentViewState
+//    @FocusState private var isFocused: Bool
+//
+//    var body: some View {
+//        VStack(alignment: .leading, spacing: 4) {
+//            Text(viewState.label)
+//                .font(.caption)
+//                .foregroundColor(.secondary)
+//
+//            if viewState.isSecure {
+//                SecureField("Enter value", text: Binding(
+//                    get: { viewState.text },
+//                    set: { viewState.onTextChanged($0) }
+//                ))
+//                .textFieldStyle(.roundedBorder)
+//                .focused($isFocused)
+//                .onChange(of: isFocused) { focused in
+//                    viewState.onFocusChanged(focused)
+//                }
+//            } else {
+//                TextField("Enter value", text: Binding(
+//                    get: { viewState.text },
+//                    set: { viewState.onTextChanged($0) }
+//                ))
+//                .textFieldStyle(.roundedBorder)
+//                .focused($isFocused)
+//                .onChange(of: isFocused) { focused in
+//                    viewState.onFocusChanged(focused)
+//                }
+//            }
+//
+//            if viewState.showError {
+//                Text("Invalid input")
+//                    .font(.caption)
+//                    .foregroundColor(.red)
+//            }
+//        }
+//    }
+//}
 
 // MARK: - ExampleViewModel
 

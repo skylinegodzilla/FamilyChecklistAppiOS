@@ -20,7 +20,8 @@ import Foundation
 final class AccessViewModel: ObservableObject {
 
     // MARK: - Public Published State
-    @Published private(set) var viewState: ViewState = ViewState.initial
+    @Published
+    private(set) var viewState: ViewState = ViewState.initial
 
     // MARK: - Private State
     private var model: Model {

@@ -124,7 +124,7 @@ final class ExampleViewModel: ObservableObject {
         
         let fieldBViewState = createTextInputViewState(
             for: \Model.textFieldB,
-            label: "Confurm Name",
+            label: "Conf Name",
             validatorCondition: { !$0.isEmpty && $0 == self.model.textFieldA.text }
         )
         
@@ -156,7 +156,7 @@ final class ExampleViewModel: ObservableObject {
         label: String,
         validatorCondition: ((String) -> Bool)? = nil,
         isSecure: Bool = false
-    ) -> TextInputComponentViewState {
+    ) -> TextFieldComponentViewState {
         let field = model[keyPath: keyPath]
         let validator = validatorCondition ?? field.validator
 
@@ -180,7 +180,7 @@ final class ExampleViewModel: ObservableObject {
             showError = false
         }
 
-        return TextInputComponentViewState(
+        return TextFieldComponentViewState(
             label: label,
             text: field.text,
             isValid: validator(field.text),
@@ -212,14 +212,14 @@ final class ExampleViewModel: ObservableObject {
     struct ViewState {
         let title: String
         let statusMessage: String?
-        let fieldAViewState: TextInputComponentViewState
-        let fieldBViewState: TextInputComponentViewState
-        let fieldCViewState: TextInputComponentViewState
+        let fieldAViewState: TextFieldComponentViewState
+        let fieldBViewState: TextFieldComponentViewState
+        let fieldCViewState: TextFieldComponentViewState
 
         static let initial = ViewState(
             title: "",
             statusMessage: nil,
-            fieldAViewState: TextInputComponentViewState(
+            fieldAViewState: TextFieldComponentViewState(
                 label: "",
                 text: "",
                 isValid: true,
@@ -228,7 +228,7 @@ final class ExampleViewModel: ObservableObject {
                 onTextChanged: { _ in },
                 onFocusChanged: { _ in }
             ),
-            fieldBViewState: TextInputComponentViewState(
+            fieldBViewState: TextFieldComponentViewState(
                 label: "",
                 text: "",
                 isValid: true,
@@ -237,7 +237,7 @@ final class ExampleViewModel: ObservableObject {
                 onTextChanged: { _ in },
                 onFocusChanged: { _ in }
             ),
-            fieldCViewState: TextInputComponentViewState(
+            fieldCViewState: TextFieldComponentViewState(
                 label: "",
                 text: "",
                 isValid: true,
@@ -260,9 +260,9 @@ struct ExampleScreen: View {
             Text(viewModel.viewState.title)
                 .font(.title2)
 
-            TextInputComponent(viewState: viewModel.viewState.fieldAViewState)
-            TextInputComponent(viewState: viewModel.viewState.fieldBViewState)
-            TextInputComponent(viewState: viewModel.viewState.fieldCViewState)
+            TextFieldComponent(viewState: viewModel.viewState.fieldAViewState)
+            TextFieldComponent(viewState: viewModel.viewState.fieldBViewState)
+            TextFieldComponent(viewState: viewModel.viewState.fieldCViewState)
 
             if let message = viewModel.viewState.statusMessage {
                 Text(message).foregroundColor(.green)

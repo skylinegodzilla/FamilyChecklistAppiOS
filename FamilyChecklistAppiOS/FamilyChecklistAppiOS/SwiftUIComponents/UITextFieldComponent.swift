@@ -10,7 +10,7 @@ import SwiftUI
 
 // MARK: - TextInputComponentViewState
 
-struct TextInputComponentViewState {
+struct TextFieldComponentViewState {
     let label: String
     let text: String
     let isValid: Bool
@@ -56,8 +56,8 @@ struct TextFieldModel {
 
 // MARK: - TextInputComponent
 
-struct TextInputComponent: View {
-    let viewState: TextInputComponentViewState
+struct TextFieldComponent: View {
+    let viewState: TextFieldComponentViewState
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -100,7 +100,7 @@ struct TextInputComponent: View {
 // MARK: - Preview
 // this is a complex preview because we are doing this with out a view model
 
-struct TextInputComponent_Previews: PreviewProvider {
+struct TextFieldComponent_Previews: PreviewProvider {
     static var previews: some View {
         PreviewWrapper()
             .padding()
@@ -119,7 +119,7 @@ struct TextInputComponent_Previews: PreviewProvider {
 
         var body: some View {
             VStack(spacing: 16) {
-                TextInputComponent(viewState: makeViewState(
+                TextFieldComponent(viewState: makeViewState(
                     id: "A",
                     label: "Username",
                     text: textA,
@@ -128,7 +128,7 @@ struct TextInputComponent_Previews: PreviewProvider {
                     onTextChanged: { textA = $0 }
                 ))
 
-                TextInputComponent(viewState: makeViewState(
+                TextFieldComponent(viewState: makeViewState(
                     id: "B",
                     label: "Email",
                     text: textB,
@@ -137,7 +137,7 @@ struct TextInputComponent_Previews: PreviewProvider {
                     onTextChanged: { textB = $0 }
                 ))
 
-                TextInputComponent(viewState: makeViewState(
+                TextFieldComponent(viewState: makeViewState(
                     id: "C",
                     label: "Password",
                     text: textC,
@@ -155,7 +155,7 @@ struct TextInputComponent_Previews: PreviewProvider {
             isSecure: Bool,
             validator: @escaping (String) -> Bool,
             onTextChanged: @escaping (String) -> Void
-        ) -> TextInputComponentViewState {
+        ) -> TextFieldComponentViewState {
             let isFocused = focusedField == id
             let touched: Bool
             switch id {
@@ -165,7 +165,7 @@ struct TextInputComponent_Previews: PreviewProvider {
             default: touched = false
             }
 
-            return TextInputComponentViewState(
+            return TextFieldComponentViewState(
                 label: label,
                 text: text,
                 isValid: validator(text),

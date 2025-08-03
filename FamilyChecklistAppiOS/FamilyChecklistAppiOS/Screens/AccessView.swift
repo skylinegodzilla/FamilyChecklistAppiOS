@@ -11,48 +11,36 @@ struct AccessView: View {
     @StateObject private var viewModel = AccessViewModel()
 
     var body: some View {
-        var viewState = viewModel.viewState
-        
+        let viewState = viewModel.viewState
+
         VStack(spacing: 32) {
             // Title stays pinned — smooth transition
             Text(viewState.title)
                 .font(.largeTitle)
                 .bold()
-                .frame(maxHeight: 60) // fixes vertical shift
-                .animation(.easeInOut(duration: 0.3), value: viewModel.viewState.title)
+                .frame(maxHeight: 60)
+                .animation(.easeInOut(duration: 0.3), value: viewState.title)
 
-            // FORM CONTAINER
             VStack(spacing: 16) {
-                TextField("Username", text: Binding(
-                    get: { viewState.username },
-                    set: viewState.onUsernameChange
-                ))
-                .textFieldStyle(.roundedBorder)
+                // MARK: Username
+                TextFieldComponent(viewState: viewState.usernameTextFieldViewState)
 
+                // MARK: Email (only in register mode)
                 if viewState.isRegistering {
-                    TextField("Email", text: Binding(
-                        get: { viewState.email },
-                        set: viewState.onEmailChange
-                    ))
-                    .textFieldStyle(.roundedBorder)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    TextFieldComponent(viewState: viewState.emailTextFieldViewState)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                 }
 
-                SecureField("Password", text: Binding(
-                    get: { viewState.password },
-                    set: viewState.onPasswordChange
-                ))
-                .textFieldStyle(.roundedBorder)
+                // MARK: Password
+                TextFieldComponent(viewState: viewState.passwordTextFieldViewState)
 
+                // MARK: Confirm Password (only in register mode)
                 if viewState.isRegistering {
-                    SecureField("Confirm Password", text: Binding(
-                        get: { viewState.confirmPassword ?? "" },
-                        set: viewState.onConfirmPasswordChange
-                    ))
-                    .textFieldStyle(.roundedBorder)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    TextFieldComponent(viewState: viewState.confirmPasswordTextFieldViewState)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                 }
 
+                // MARK: Error Message
                 if let errorMessage = viewState.errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
@@ -61,6 +49,7 @@ struct AccessView: View {
                         .padding(.top, 4)
                 }
 
+                // MARK: Submit Button
                 Button(viewState.isRegistering ? "Create Account" : "Login") {
                     Task {
                         await viewState.onSubmit?()
@@ -68,8 +57,9 @@ struct AccessView: View {
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(viewState.onSubmit == nil)
-                .visuallyEnabled(viewState.onSubmit != nil) // TODO: build a custom button so that we dont need to call this.
+                .visuallyEnabled(viewState.onSubmit != nil)
 
+                // MARK: Toggle Login/Register
                 Button(viewState.isRegistering ? "Already have an account?" : "Create an account") {
                     withAnimation(.easeInOut(duration: 0.4)) {
                         viewState.onToggleFormMode()
@@ -94,8 +84,6 @@ struct AccessView: View {
         .padding()
     }
 }
-
-
 
 #Preview {
     AccessView()

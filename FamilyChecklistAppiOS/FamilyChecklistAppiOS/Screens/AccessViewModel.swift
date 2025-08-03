@@ -6,26 +6,19 @@
 //
 
 import Foundation
-
-//
-//  AccessViewModel.swift
-//  FamilyChecklistAppiOS
-//
-//  Created by Benjamin james cawley on 30/07/2025.
-//
-
-import Foundation
+// TODO: Sort out the valdation for the submit button
 
 @MainActor
 final class AccessViewModel: ObservableObject {
 
     // MARK: - Public Published State
-    @Published private(set) var viewState: ViewState = ViewState.initial
+    @Published
+    private(set) var viewState: ViewState = ViewState.initial
 
     // MARK: - Private State
     private var model: Model {
         didSet {
-            viewState = Self.createViewState(from: model, viewModel: self)
+            viewState = self.createViewState(from: model)
         }
     }
 
@@ -35,36 +28,62 @@ final class AccessViewModel: ObservableObject {
     init(authRepository: AuthRepository = AuthRepository()) {
         self.authRepository = authRepository
         self.model = Model()
-        self.viewState = Self.createViewState(from: model, viewModel: self)
+        self.viewState = self.createViewState(from: model)
     }
 
     // MARK: - Private State Mapping
-    private static func createViewState(from model: Model, viewModel: AccessViewModel) -> ViewState {
+    private func createViewState(from model: Model) -> ViewState {
+        // TODO: tidy this validation up
         let isValid: Bool = {
-            if model.username.isEmpty || model.password.isEmpty {
+            if model.usernameTextField.text.isEmpty || model.passwordTextField.text.isEmpty {
                 return false
             }
             if model.isRegistering {
-                return !model.email.isEmpty && model.password == model.confirmPassword
+                return !model.emailTextField.text.isEmpty && model.passwordTextField.text == model.confirmPasswordTextField.text
             }
             return true
         }()
-
+        // MARK: build Text field view states
+        let usernameTextFieldViewState = createTextInputViewState(
+            for: \Model.usernameTextField,
+            label: "Name",
+            validatorCondition: { !$0.isEmpty }
+        )
+        
+        let emailTextFieldViewState = createTextInputViewState(
+            for: \Model.emailTextField,
+            label: "Email",
+            validatorCondition: { $0.contains("@") && $0.contains(".") }
+        )
+        
+        let passwordTextFieldViewState = createTextInputViewState(
+            for: \Model.passwordTextField,
+            label: "Password",
+            validatorCondition: { $0.count >= 8 },
+            isSecure: true
+        )
+        
+        let confirmPasswordTextFieldViewState = createTextInputViewState(
+            for: \Model.confirmPasswordTextField,
+            label: "Confirm Password",
+            validatorCondition: { !$0.isEmpty && $0 == self.model.passwordTextField.text },
+            isSecure: true
+        )
+        
+        // MARK: build other view states
         return ViewState(
-            username: model.username,
-            email: model.email,
-            password: model.password,
-            confirmPassword: model.isRegistering ? model.confirmPassword : nil,
+            title: model.isRegistering ? "Register" : "Login", // TODO: Wonder if I should look in to localising strings?
             isRegistering: model.isRegistering,
             isLoading: model.isLoading,
             errorMessage: model.errorMessage,
 
-            onUsernameChange: { [weak viewModel] in viewModel?.updateUsername($0) },
-            onEmailChange: { [weak viewModel] in viewModel?.updateEmail($0) },
-            onPasswordChange: { [weak viewModel] in viewModel?.updatePassword($0) },
-            onConfirmPasswordChange: { [weak viewModel] in viewModel?.updateConfirmPassword($0) },
-            onToggleFormMode: { [weak viewModel] in viewModel?.toggleFormMode() },
-            onSubmit: isValid ? { [weak viewModel] in await viewModel?.submit() } : nil
+            onToggleFormMode: { [weak self] in self?.toggleFormMode() },
+            onSubmit: isValid ? { [weak self] in await self?.submit() } : nil,
+            
+            usernameTextFieldViewState: usernameTextFieldViewState,
+            emailTextFieldViewState: emailTextFieldViewState,
+            passwordTextFieldViewState: passwordTextFieldViewState,
+            confirmPasswordTextFieldViewState: confirmPasswordTextFieldViewState
         )
     }
 
@@ -72,15 +91,59 @@ final class AccessViewModel: ObservableObject {
     // None yet
 
     // MARK: - Private Logic
-    private func updateUsername(_ value: String) { model.username = value }
-    private func updateEmail(_ value: String) { model.email = value }
-    private func updatePassword(_ value: String) { model.password = value }
-    private func updateConfirmPassword(_ value: String) { model.confirmPassword = value }
+    private func createTextInputViewState(
+        for keyPath: WritableKeyPath<Model, TextFieldModel>,
+        label: String,
+        validatorCondition: ((String) -> Bool)? = nil,
+        isSecure: Bool = false
+    ) -> TextFieldComponentViewState {
+        let field = model[keyPath: keyPath]
+        let validator = validatorCondition ?? field.validator
 
+        let showError: Bool
+        switch keyPath {
+        case \Model.usernameTextField:
+            showError = field.touched && !validator(field.text)
+
+        case \Model.emailTextField:
+            showError = field.touched && !validator(field.text)
+
+        case \Model.passwordTextField:
+            showError = field.touched && !validator(field.text)
+            
+        case \Model.confirmPasswordTextField:
+            let isMatching = field.text == model.passwordTextField.text // TODO: why do I need validation here if I have the validatorCondition: { ... }
+            if field.isFocused {
+                showError = false
+            } else {
+                showError = field.touched && !isMatching
+            }
+
+        default:
+            showError = false
+        }
+
+        return TextFieldComponentViewState(
+            label: label,
+            text: field.text,
+            isValid: validator(field.text),
+            showError: showError,
+            isSecure: isSecure,
+            onTextChanged: { [weak self] newText in
+                guard let self = self else { return }
+                self.model[keyPath: keyPath].updateText(newText)
+            },
+            onFocusChanged: { [weak self] focused in
+                guard let self = self else { return }
+                self.model[keyPath: keyPath].setFocus(focused)
+            }
+        )
+    }
+    
     private func toggleFormMode() {
         model.isRegistering.toggle()
-        model.email = ""
-        model.confirmPassword = ""
+        model.emailTextField.text = ""
+        model.confirmPasswordTextField.text = ""
         model.errorMessage = nil
     }
 
@@ -95,28 +158,34 @@ final class AccessViewModel: ObservableObject {
 
             if self.model.isRegistering {
                 let result = await self.authRepository.register(
-                    username: self.model.username,
-                    email: self.model.email,
-                    password: self.model.password
+                    username: self.model.usernameTextField.text,
+                    email: self.model.emailTextField.text,
+                    password: self.model.passwordTextField.text
                 )
                 switch result {
                 case .success:
                     // TODO: Navigate to TabView/HomeView on successful registration
+                    print("✅ Registration successful")
                     break
                 case .failure(let error):
-                    self.model.errorMessage = error.localizedDescription
+                    var errorMessage = "\(error)"
+                    if (errorMessage == "conflict") {errorMessage = "Username or email is allready taken" } // 409 error
+                    self.model.errorMessage = errorMessage
                 }
             } else {
                 let result = await self.authRepository.login(
-                    username: self.model.username,
-                    password: self.model.password
+                    username: self.model.usernameTextField.text,
+                    password: self.model.passwordTextField.text
                 )
                 switch result {
                 case .success:
                     // TODO: Navigate to TabView/HomeView on successful login
+                    print("✅ Login successful")
                     break // handle success if needed
                 case .failure(let error):
-                    self.model.errorMessage = error.localizedDescription
+                    var errorMessage = "\(error)"
+                    if (errorMessage == "unauthorized") {errorMessage = "Invalid credentials" } // 401 error
+                    self.model.errorMessage = errorMessage
                 }
             }
         }
@@ -126,45 +195,74 @@ final class AccessViewModel: ObservableObject {
     // MARK: - Internal Structs
 
     private struct Model {
-        var username: String = ""
-        var email: String = ""
-        var password: String = ""
-        var confirmPassword: String = ""
         var isRegistering: Bool = false
         var isLoading: Bool = false
         var errorMessage: String? = nil
+        
+        var usernameTextField: TextFieldModel = TextFieldModel()
+        var emailTextField: TextFieldModel = TextFieldModel()
+        var passwordTextField: TextFieldModel = TextFieldModel()
+        var confirmPasswordTextField: TextFieldModel = TextFieldModel()
     }
     
     struct ViewState {
-        var username: String
-        var email: String
-        var password: String
-        var confirmPassword: String?
+        var title: String
         var isRegistering: Bool
         var isLoading: Bool
         var errorMessage: String?
 
-        let onUsernameChange: (String) -> Void
-        let onEmailChange: (String) -> Void
-        let onPasswordChange: (String) -> Void
-        let onConfirmPasswordChange: (String) -> Void
         let onToggleFormMode: () -> Void
         let onSubmit: (() async -> Void)?
+        
+        let usernameTextFieldViewState: TextFieldComponentViewState
+        let emailTextFieldViewState: TextFieldComponentViewState
+        let passwordTextFieldViewState: TextFieldComponentViewState
+        let confirmPasswordTextFieldViewState: TextFieldComponentViewState
 
         static let initial = ViewState(
-            username: "",
-            email: "",
-            password: "",
-            confirmPassword: nil,
+            title: "Login",
             isRegistering: false,
             isLoading: false,
             errorMessage: nil,
-            onUsernameChange: { _ in },
-            onEmailChange: { _ in },
-            onPasswordChange: { _ in },
-            onConfirmPasswordChange: { _ in },
             onToggleFormMode: { },
-            onSubmit: nil
+            onSubmit: nil,
+            
+            usernameTextFieldViewState: TextFieldComponentViewState(
+                label: "",
+                text: "",
+                isValid: true,
+                showError: false,
+                isSecure: false,
+                onTextChanged: { _ in },
+                onFocusChanged: { _ in }
+            ),
+            emailTextFieldViewState: TextFieldComponentViewState(
+                label: "",
+                text: "",
+                isValid: true,
+                showError: false,
+                isSecure: false,
+                onTextChanged: { _ in },
+                onFocusChanged: { _ in }
+            ),
+            passwordTextFieldViewState: TextFieldComponentViewState(
+                label: "",
+                text: "",
+                isValid: true,
+                showError: false,
+                isSecure: false,
+                onTextChanged: { _ in },
+                onFocusChanged: { _ in }
+            ),
+            confirmPasswordTextFieldViewState: TextFieldComponentViewState(
+                label: "",
+                text: "",
+                isValid: true,
+                showError: false,
+                isSecure: false,
+                onTextChanged: { _ in },
+                onFocusChanged: { _ in }
+            )
         )
     }
 

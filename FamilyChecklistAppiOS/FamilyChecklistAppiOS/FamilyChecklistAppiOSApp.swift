@@ -11,7 +11,7 @@ import SwiftUI
 struct FamilyChecklistAppiOSApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AccessView()
         }
     }
 }

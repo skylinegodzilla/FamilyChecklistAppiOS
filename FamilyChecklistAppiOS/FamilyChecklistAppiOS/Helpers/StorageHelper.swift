@@ -8,34 +8,39 @@
 import Foundation
 import KeychainAccess
 
-// Made this static for now might make it singleton once I have added the foundatiosn for that and need it for testing.
+final class StorageHelper {
+    static let shared = StorageHelper()
+    
+    private let userDefaults: UserDefaults
+    private let keychain: Keychain
 
-enum StorageHelper {
-    private static let userDefaults = UserDefaults.standard
-    private static let keychain = Keychain(service: Bundle.main.bundleIdentifier ?? "DefaultApp")
+    // Private init to enforce singleton
+    private init(userDefaults: UserDefaults = .standard,
+                 keychain: Keychain = Keychain(service: Bundle.main.bundleIdentifier ?? "DefaultApp")) {
+        self.userDefaults = userDefaults
+        self.keychain = keychain
+    }
 
     // MARK: - Codable support (UserDefaults)
-    // This will store different kinds of data so it needs to suport a range of types.
 
-    static func save<T: Codable>(_ value: T, forKey key: String) {
+    func save<T: Codable>(_ value: T, forKey key: String) {
         if let encoded = try? JSONEncoder().encode(value) {
             userDefaults.set(encoded, forKey: key)
         }
     }
 
-    static func get<T: Codable>(forKey key: String) -> T? {
+    func get<T: Codable>(forKey key: String) -> T? {
         guard let data = userDefaults.data(forKey: key) else { return nil }
         return try? JSONDecoder().decode(T.self, from: data)
     }
 
-    static func delete(forKey key: String) {
+    func delete(forKey key: String) {
         userDefaults.removeObject(forKey: key)
     }
 
     // MARK: - Secure String Storage (Keychain)
-    // This is to store data that needs to be encripted and at this stage they all conform to string.
 
-    static func saveSecure(_ value: String, forKey key: String) {
+    func saveSecure(_ value: String, forKey key: String) {
         do {
             try keychain.set(value, key: key)
         } catch {
@@ -43,11 +48,11 @@ enum StorageHelper {
         }
     }
 
-    static func getSecure(forKey key: String) -> String? {
+    func getSecure(forKey key: String) -> String? {
         return try? keychain.get(key) ?? nil
     }
 
-    static func deleteSecure(forKey key: String) {
+    func deleteSecure(forKey key: String) {
         do {
             try keychain.remove(key)
         } catch {
@@ -55,7 +60,7 @@ enum StorageHelper {
         }
     }
 
-    static func clearAllSecure() {
+    func clearAllSecure() {
         do {
             try keychain.removeAll()
         } catch {
@@ -63,4 +68,3 @@ enum StorageHelper {
         }
     }
 }
-

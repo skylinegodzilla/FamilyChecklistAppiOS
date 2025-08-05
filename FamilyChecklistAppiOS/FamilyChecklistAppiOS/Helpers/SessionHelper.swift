@@ -5,35 +5,45 @@
 //  Created by Benjamin james cawley on 30/07/2025.
 //
 
+import Foundation
+
 struct AuthenticatedSession: Codable {
     let token: String   // Stored securely in Keychain
     let username: String  // Stored in UserDefaults
     let isAdmin: Bool     // Stored in UserDefaults
 }
 
-enum SessionHelper {
-    // Only SessionHelper should directly access these storage keys
-    private static let tokenKey = "sessionToken"
-    private static let usernameKey = "sessionUsername"
-    private static let isAdminKey = "sessionIsAdmin"
+final class SessionHelper {
+    static let shared = SessionHelper()
 
-    // Save session values to storage from a successful login response
-    static func saveSession(_ session: AuthenticatedSession) {
-        StorageHelper.save(session.username, forKey: usernameKey)
-        StorageHelper.save(session.isAdmin, forKey: isAdminKey)
-        StorageHelper.saveSecure(session.token, forKey: tokenKey)
+    // MARK: - Storage keys (private)
+    private let tokenKey = "sessionToken"
+    private let usernameKey = "sessionUsername"
+    private let isAdminKey = "sessionIsAdmin"
+
+    private let storage: StorageHelper
+
+    // Private init for singleton, inject storageHelper for testability
+    private init(storageHelper: StorageHelper = StorageHelper.shared) {
+        self.storage = storageHelper
     }
 
-    // Returns an AuthenticatedSession only if all required values exist in storage
-    static func getSession() -> AuthenticatedSession? {
-        let username = StorageHelper.get(forKey: usernameKey) as String?
-        let isAdmin = StorageHelper.get(forKey: isAdminKey) as Bool?
-        let token = StorageHelper.getSecure(forKey: tokenKey)
+    // MARK: - Session Management
+
+    func saveSession(_ session: AuthenticatedSession) {
+        storage.save(session.username, forKey: usernameKey)
+        storage.save(session.isAdmin, forKey: isAdminKey)
+        storage.saveSecure(session.token, forKey: tokenKey)
+    }
+
+    func getSession() -> AuthenticatedSession? {
+        let username: String? = storage.get(forKey: usernameKey)
+        let isAdmin: Bool? = storage.get(forKey: isAdminKey)
+        let token: String? = storage.getSecure(forKey: tokenKey)
 
         guard let username,
               let isAdmin,
               let token else {
-            // Some logging here so that we can see what is missing
             var missing: [String] = []
             if username == nil { missing.append("username") }
             if isAdmin == nil { missing.append("isAdmin") }
@@ -49,11 +59,9 @@ enum SessionHelper {
         )
     }
 
-    // Clears all session-related values from storage
-    static func clearSession() {
-        StorageHelper.delete(forKey: usernameKey)
-        StorageHelper.delete(forKey: isAdminKey)
-        StorageHelper.deleteSecure(forKey: tokenKey)
+    func clearSession() {
+        storage.delete(forKey: usernameKey)
+        storage.delete(forKey: isAdminKey)
+        storage.deleteSecure(forKey: tokenKey)
     }
 }
-

@@ -163,8 +163,19 @@ final class AccessViewModel: ObservableObject {
                     password: self.model.passwordTextField.text
                 )
                 switch result {
-                case .success:
-                    // TODO: Navigate to TabView/HomeView on successful registration
+                case .success(let response):
+                    let username = self.model.usernameTextField.text
+                    let session = AuthenticatedSession(token: response.token,
+                                                       username: username, // TODO: yeahh I forgot my model structures lol I need to fix this messs :P
+                                                       isAdmin: false // when an account is fresh created ashume that the user is not admin
+                    )
+                    SessionHelper.shared.saveSession(session) // TODO: Dependincey inject this
+                    
+                    //Navigate to TabView/HomeView on successful registration
+                    await MainActor.run {
+                        AppState.shared.flow = .tab
+                    }
+                    
                     print("✅ Registration successful")
                     break
                 case .failure(let error):
@@ -178,10 +189,21 @@ final class AccessViewModel: ObservableObject {
                     password: self.model.passwordTextField.text
                 )
                 switch result {
-                case .success:
-                    // TODO: Navigate to TabView/HomeView on successful login
+                case .success(let response):
+                    let username = self.model.usernameTextField.text
+                    let isAdmin = response.role == "ADMIN"
+                    let session = AuthenticatedSession(token: response.token,
+                                                       username: username, // TODO: yeahh I forgot my model structures lol I need to fix this messs :P
+                                                       isAdmin: isAdmin
+                    )
+                    SessionHelper.shared.saveSession(session) // TODO: Dependincey inject this
+                    
+                    // Navigate to TabView/HomeView on successful login
+                    await MainActor.run {
+                        AppState.shared.flow = .tab
+                    }
                     print("✅ Login successful")
-                    break // handle success if needed
+                    
                 case .failure(let error):
                     var errorMessage = "\(error)"
                     if (errorMessage == "unauthorized") {errorMessage = "Invalid credentials" } // 401 error
